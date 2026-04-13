@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>BOE Hidro CHR — Live Intelligence</title>
+<style>
+/* ============================================================
+   TEMA: GitHub Primer Light — alto contraste WCAG AA
+   ============================================================ */
+:root{
+  --bg:#f6f8fa; --bg2:#ffffff; --bg3:#f6f8fa;
+  --panel:#ffffff; --panel2:#f6f8fa;
+  --text:#1f2328; --muted:#57606a; --subtle:#6e7781;
+  --line:rgba(208,215,222,.72); --line2:#d0d7de;
+  --accent:#218bff; --accent2:#0969da;
+  --green:#1a7f37; --amber:#7a5212; --red:#a40e26;
+  --violet:#6639b7; --teal:#096451;
+  --shadow:0 1px 3px rgba(31,35,40,.12),0 8px 24px rgba(31,35,40,.06);
+  --radius:16px;
+  --label:#0550ae;
+  --live:#1a7f37;
+  --badge-high-bg:#ffebe9; --badge-high-text:#a40e26; --badge-high-border:#ff818266;
+  --badge-mid-bg:#fff8c5;  --badge-mid-text:#7a5212;  --badge-mid-border:#e3b34166;
+  --badge-low-bg:#dafbe1;  --badge-low-text:#1a7f37;  --badge-low-border:#4ac26b66;
+  --badge-violet-bg:#fbefff;--badge-violet-text:#6639b7;--badge-violet-border:#d2b2ff66;
+  --badge-teal-bg:#e0f8f3; --badge-teal-text:#096451; --badge-teal-border:#66d9c566;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:'Inter',ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.5}
+body{min-height:100vh}
+a{color:var(--accent2)}
+button,input,select,textarea{font:inherit}
+
+/* LAYOUT */
+.app{max-width:1600px;margin:0 auto;padding:16px}
+.header{
+  display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;
+  background:var(--bg2);border:1px solid var(--line2);border-radius:20px;
+  padding:18px 22px;box-shadow:var(--shadow);margin-bottom:16px
+}
+.title{font-size:clamp(1.2rem,2vw,1.7rem);font-weight:800;letter-spacing:.01em}
+.subtitle{color:var(--muted);font-size:.88rem;margin-top:3px}
+.header-right{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.author{font-size:.84rem;color:var(--muted)}
+
+.layout{display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start}
+
+/* PANEL */
+.panel{background:var(--panel);border:1px solid var(--line2);border-radius:16px;box-shadow:var(--shadow)}
+.panel-hd{
+  padding:12px 16px;border-bottom:1px solid var(--line2);
+  display:flex;align-items:center;justify-content:space-between;gap:10px
+}
+.panel-hd h2{margin:0;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--label)}
+.panel-bd{padding:14px 16px}
+.sidebar{position:sticky;top:12px}
+
+/* FORM */
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.field:last-child{margin-bottom:0}
+.field label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--label)}
+.field input,.field select,.field textarea{
+  width:100%;background:#fff;color:var(--text);
+  border:1px solid var(--line2);border-radius:8px;padding:8px 10px;outline:none;
+  transition:border-color .15s
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.1)
+}
+.field textarea{min-height:72px;resize:vertical;font-size:.86rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.hint{font-size:.75rem;color:var(--muted);line-height:1.4;margin-top:2px}
+.checks{display:flex;flex-direction:column;gap:7px;margin-top:4px}
+.check{display:flex;gap:8px;align-items:center;font-size:.84rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{width:15px;height:15px;flex:none;cursor:pointer;accent-color:var(--accent2)}
+
+/* TOGGLE OR/AND */
+.toggle-row{display:flex;gap:6px;margin-top:5px}
+.tbtn{
+  flex:1;padding:7px 10px;border-radius:8px;background:var(--bg3);
+  border:1px solid var(--line2);cursor:pointer;color:var(--muted);font-size:.82rem;font-weight:600
+}
+.tbtn.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+
+/* BOTONES */
+.btn{
+  appearance:none;border:1px solid var(--line2);background:var(--bg2);color:var(--text);
+  border-radius:8px;padding:9px 14px;text-decoration:none;
+  display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:.88rem;font-weight:600;
+  transition:border-color .15s,box-shadow .15s
+}
+.btn:hover{border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.1)}
+.btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+.btn.primary{background:var(--accent2);color:#fff;border:none;box-shadow:0 2px 8px rgba(9,105,218,.25)}
+.btn.primary:hover{background:#0861c7}
+.btn.danger{background:#ffebe9;color:var(--badge-high-text);border-color:var(--badge-high-border)}
+.btn.success{background:#dafbe1;color:var(--green);border-color:var(--badge-low-border)}
+.btn-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+
+/* STATUS BAR */
+.status-bar{
+  display:flex;align-items:center;gap:12px;padding:14px 16px;
+  background:var(--bg2);border:1px solid var(--line2);border-radius:14px;
+  box-shadow:var(--shadow);margin-bottom:14px
+}
+.status-dot{width:10px;height:10px;border-radius:50%;background:var(--subtle);flex:none}
+.status-dot.live{background:var(--live);box-shadow:0 0 0 0 rgba(26,127,55,.6);animation:pulse 1.4s infinite}
+.status-dot.done{background:var(--accent2)}
+.status-dot.err{background:var(--red)}
+.status-main{flex:1;min-width:0}
+.status-txt{font-weight:700;font-size:.92rem}
+.status-sub{font-size:.78rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status-count{font-size:2rem;font-weight:800;color:var(--accent2);min-width:60px;text-align:right}
+.progress-track{height:5px;background:var(--bg3);border-radius:999px;overflow:hidden;margin-top:8px;border:1px solid var(--line)}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .3s}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(26,127,55,.5)}70%{box-shadow:0 0 0 10px rgba(26,127,55,0)}100%{box-shadow:0 0 0 0 rgba(26,127,55,0)}}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.kpi{padding:13px 14px;border-radius:12px;border:1px solid var(--line2);background:var(--bg2);cursor:pointer}
+.kpi:hover{border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.08)}
+.kpi .n{font-size:clamp(1.3rem,1.8vw,1.8rem);font-weight:800;color:var(--text);margin-top:3px}
+.kpi .l{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--label)}
+.kpi .s{font-size:.72rem;color:var(--muted);margin-top:2px}
+
+/* TABS */
+.tabs{display:flex;gap:7px;flex-wrap:wrap;padding:12px 14px 0}
+.tab{padding:7px 14px;border-radius:999px;border:1px solid var(--line2);cursor:pointer;background:var(--bg3);color:var(--muted);font-size:.84rem;font-weight:600}
+.tab.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.tab:hover:not(.active){border-color:var(--accent);color:var(--accent2)}
+
+/* VIEWS */
+.view-panel{display:none;padding:14px}
+.view-panel.active{display:block}
+
+/* CHARTS */
+.charts-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-bottom:14px}
+.chart-card{background:var(--bg3);border:1px solid var(--line2);border-radius:12px;padding:12px}
+.chart-card h3{margin:0 0 10px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--label)}
+.bar-list{display:flex;flex-direction:column;gap:7px}
+.bar-row{display:grid;grid-template-columns:minmax(100px,180px) 1fr auto;gap:8px;align-items:center;cursor:pointer;padding:3px 5px;border-radius:6px}
+.bar-row:hover{background:var(--bg2)}
+.bar-label{font-size:.84rem;color:var(--text)}
+.bar-track{height:11px;background:var(--bg2);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:999px}
+.bar-val{font-size:.8rem;color:var(--muted);text-align:right;min-width:24px}
+.year-mini{display:flex;align-items:flex-end;gap:5px;min-height:160px}
+.year-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:5px;cursor:pointer;border-radius:3px}
+.year-col:hover .year-bar{opacity:.75}
+.year-bar{background:linear-gradient(180deg,var(--accent2),var(--accent));border-radius:6px 6px 2px 2px;min-height:4px}
+.year-lbl{text-align:center;font-size:.65rem;color:var(--muted);white-space:nowrap}
+.year-val{text-align:center;font-size:.7rem;font-weight:700;color:var(--accent2)}
+
+/* TABLA */
+.table-wrap{overflow:auto;border-radius:0 0 12px 12px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--label);
+   position:sticky;top:0;background:var(--bg3);border-bottom:2px solid var(--line2);cursor:pointer}
+th:hover{background:var(--bg2)}
+td{font-size:.84rem;color:var(--text)}
+tr:hover td{background:rgba(9,105,218,.03)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;border:1px solid transparent;font-size:.72rem;font-weight:600;white-space:nowrap}
+.badge.high  {background:var(--badge-high-bg);  color:var(--badge-high-text);  border-color:var(--badge-high-border)}
+.badge.mid   {background:var(--badge-mid-bg);   color:var(--badge-mid-text);   border-color:var(--badge-mid-border)}
+.badge.low   {background:var(--badge-low-bg);   color:var(--badge-low-text);   border-color:var(--badge-low-border)}
+.badge.violet{background:var(--badge-violet-bg);color:var(--badge-violet-text);border-color:var(--badge-violet-border)}
+.badge.teal  {background:var(--badge-teal-bg);  color:var(--badge-teal-text);  border-color:var(--badge-teal-border)}
+.badge.blue  {background:#ddf4ff;color:#0550ae;border-color:#54aeff66}
+
+/* SOURCE TAG */
+.src{display:inline-block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+     padding:2px 6px;border-radius:4px;background:var(--badge-teal-bg);color:var(--badge-teal-text)}
+.src.dog,.src.boga{background:var(--badge-violet-bg);color:var(--badge-violet-text)}
+
+/* CARDS MÓVIL */
+.cards{display:none;flex-direction:column;gap:10px}
+.card{padding:12px 14px;border:1px solid var(--line2);border-radius:12px;background:var(--bg2)}
+.card-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.card-title{font-weight:700;font-size:.9rem}
+.card-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;font-size:.8rem}
+.card-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.linkbtn{padding:6px 10px;border-radius:7px;background:var(--bg3);border:1px solid var(--line2);cursor:pointer;color:var(--text);text-decoration:none;font-size:.82rem;font-weight:500}
+.linkbtn:hover{border-color:var(--accent);color:var(--accent2)}
+
+/* EXPEDIENTES */
+.exp-layout{display:grid;grid-template-columns:380px 1fr;gap:14px}
+.exp-summary{display:flex;flex-direction:column;gap:10px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.stat{padding:9px 11px;border-radius:10px;background:var(--bg3);border:1px solid var(--line)}
+.stat .k{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--label)}
+.stat .v{margin-top:4px;font-weight:700;font-size:.88rem}
+
+/* TIMELINE */
+.timeline-shell{position:relative}
+.timeline-wrap{overflow-x:auto;scroll-behavior:smooth;padding-bottom:8px}
+.timeline-wrap::-webkit-scrollbar{height:7px}
+.timeline-wrap::-webkit-scrollbar-thumb{background:var(--line2);border-radius:999px}
+.timeline{display:flex;gap:10px;align-items:flex-start;padding:6px 2px;min-width:max-content}
+.node{min-width:168px;position:relative;padding-top:24px}
+.node::before{content:"";position:absolute;left:12px;top:0;width:13px;height:13px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent2),var(--accent));border:2px solid var(--line2);z-index:1}
+.node:not(:last-child)::after{content:"";position:absolute;left:24px;top:5px;
+  width:calc(100% + 12px);height:2px;background:linear-gradient(90deg,var(--accent),rgba(33,139,255,.12))}
+.node-card{background:var(--bg3);border:1px solid var(--line2);border-radius:10px;padding:10px 11px;cursor:pointer;min-height:96px}
+.node-card:hover{border-color:rgba(9,105,218,.5)}
+.node-date{font-size:.74rem;font-weight:600;color:var(--label)}
+.node-stage{font-weight:700;margin-top:4px;font-size:.86rem}
+.node-sub{font-size:.78rem;color:var(--muted);margin-top:2px}
+.timeline-nav{position:absolute;top:50%;transform:translateY(-50%);width:28px;height:28px;
+  border-radius:50%;border:1px solid var(--line2);background:var(--bg2);color:var(--text);
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);cursor:pointer;z-index:4}
+.timeline-nav:hover{border-color:var(--accent)}
+.timeline-nav.left{left:2px}.timeline-nav.right{right:2px}
+.timeline-nav.hidden{display:none!important}
+.timeline-nav svg{width:13px;height:13px;pointer-events:none}
+
+/* LOG */
+.log-box{height:260px;overflow:auto;background:var(--bg3);border:1px solid var(--line2);border-radius:10px;
+  padding:10px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.76rem;line-height:1.6}
+.log-item{color:var(--text)}
+.log-item.warn{color:var(--amber)}
+.log-item.err{color:var(--red)}
+.log-item.ok{color:var(--green)}
+
+/* INLINE STATS */
+.inline-stats{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mini{padding:5px 9px;border-radius:999px;border:1px solid var(--line2);background:var(--bg3);font-size:.76rem;color:var(--muted)}
+
+/* MISC */
+.stack{display:flex;flex-direction:column;gap:9px}
+.click{cursor:pointer;color:var(--accent2)}
+.click:hover{text-decoration:underline}
+.hidden{display:none!important}
+.small{font-size:.78rem;color:var(--muted);line-height:1.4}
+.note{padding:10px 12px;border-radius:10px;border:1px solid var(--badge-mid-border);background:var(--badge-mid-bg);font-size:.82rem;color:var(--badge-mid-text);line-height:1.5}
+.filters-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.filters-row input,.filters-row select{background:var(--bg2);color:var(--text);border:1px solid var(--line2);border-radius:8px;padding:7px 10px;font-size:.84rem}
+
+/* RESPONSIVE */
+@media(max-width:1280px){.layout{grid-template-columns:1fr}.sidebar{position:static}.kpis{grid-template-columns:repeat(3,1fr)}.charts-grid,.exp-layout{grid-template-columns:1fr}}
+@media(max-width:820px){.header{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.grid2,.grid3{grid-template-columns:1fr}.timeline{flex-direction:column;min-width:0;gap:8px}.node{min-width:0;padding-top:0;padding-left:22px}.node::before{left:0;top:10px}.node::after{display:none!important}.timeline-nav{display:none}}
+@media(max-width:700px){.table-wrap{display:none}.cards{display:flex}}
+@media(max-width:500px){.app{padding:10px}.kpis{grid-template-columns:1fr}}
+
+/* Botón solicitud versión pro */
+.btn-pro{
+  appearance:none;
+  background:linear-gradient(135deg,#fff8e1,#fff3cd);
+  border:1.5px solid #e3b341;
+  color:#7a5212;
+  border-radius:8px;padding:9px 14px;
+  display:inline-flex;align-items:center;gap:7px;
+  cursor:pointer;font-size:.88rem;font-weight:700;
+  text-decoration:none;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(227,179,65,.25);
+  transition:border-color .15s,box-shadow .15s,transform .1s
+}
+.btn-pro:hover{
+  border-color:#c69320;
+  box-shadow:0 4px 16px rgba(227,179,65,.4);
+  transform:translateY(-1px)
+}
+.btn-pro svg{width:15px;height:15px;flex:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<header class="header">
+  <div>
+    <div class="title">BOE Hidro CHR — Live Intelligence</div>
+    <div class="subtitle">Rastreo en vivo del BOE · Scoring CHR · Expedientes · Timeline interactivo</div>
+  </div>
+  <div class="header-right">
+    <span class="author">Autor: Antonio Rueda Caballero</span>
+    <a class="btn-pro"
+       href="mailto:antonio.rueda.caballero@gmail.com?subject=Solicitud%20versi%C3%B3n%20escritorio%20BOE%20Hidro%20CHR&body=Hola%20Antonio%2C%0A%0ASoy%20%5Bcu%C3%A9ntame%20qui%C3%A9n%20eres%2C%20a%20qu%C3%A9%20te%20dedicas%2C%20lo%20que%20consideres%20interesante%20que%20deber%C3%ADa%20saber%20sobre%20ti%20y%20tu%20trabajo%5D%0A%0AMi%20perfil%20en%20LinkedIn%20es%3A%20%5Bpega%20aqu%C3%AD%20tu%20perfil%5D%0A%0AHe%20visto%20tu%20herramienta%20BOE%20Hidro%20CHR%20y%20me%20gustar%C3%ADa%20conocer%20m%C3%A1s%20sobre%20la%20versi%C3%B3n%20profesional%20de%20escritorio.%0A%0AGracias."
+       title="¿Interesado en la versión profesional de escritorio con automatización completa, alertas y backfill histórico? Escríbeme.">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1" y="3" width="14" height="10" rx="1.5"/><polyline points="1,3 8,9.5 15,3"/>
+      </svg>
+      ✦ Solicitar versión pro
+    </a>
+    <a class="btn primary" href="https://www.linkedin.com/in/antonio-rueda-caballero-21665323b" target="_blank" rel="noopener">Ver perfil y conectar</a>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR CONFIGURACIÓN -->
+  <aside class="panel sidebar">
+    <div class="panel-hd">
+      <h2>Configuración de búsqueda</h2>
+      <span class="mini" id="savedBadge">persistente</span>
+    </div>
+    <div class="panel-bd">
+
+      <div class="field">
+        <label>Confederación / organismo</label>
+        <select id="confSelect"></select>
+        <div class="hint">La fuente (BOE o DOG) se asigna automáticamente según el organismo.</div>
+      </div>
+
+      <div class="grid2">
+        <div class="field"><label>Año inicio</label><input id="yearStart" type="number" min="1960" max="2100" value="2023"/></div>
+        <div class="field"><label>Año fin</label><input id="yearEnd" type="number" min="1960" max="2100" value="2026"/></div>
+      </div>
+
+      <div class="field">
+        <label>Sección BOE</label>
+        <select id="sectionSelect">
+          <option value="">Todas las secciones</option>
+          <option value="5B" selected>V-B — Anuncios oficiales</option>
+          <option value="5A">V-A — Anuncios particulares</option>
+          <option value="3">III — Otras disposiciones</option>
+          <option value="2B">II-B — Autoridades y personal</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Keywords en título (una por línea)</label>
+        <textarea id="kwTitle" placeholder="aprovechamiento&#10;concesión&#10;competencia de proyectos&#10;bombeo&#10;reversible"></textarea>
+        <div class="toggle-row" id="logicTitle">
+          <button class="tbtn active" type="button" data-value="OR">OR</button>
+          <button class="tbtn" type="button" data-value="AND">AND</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Keywords en texto BOE (una por línea)</label>
+        <textarea id="kwBody" placeholder="central hidroeléctrica reversible&#10;pumped storage&#10;dominio público hidráulico&#10;salto&#10;embalse"></textarea>
+        <div class="toggle-row" id="logicBody">
+          <button class="tbtn active" type="button" data-value="OR">OR</button>
+          <button class="tbtn" type="button" data-value="AND">AND</button>
+        </div>
+        <div class="hint">Se descarga el HTML del anuncio solo cuando sea necesario para el scoring avanzado.</div>
+      </div>
+
+      <div class="field">
+        <label>Perfil de scoring CHR</label>
+        <select id="presetSelect">
+          <option value="balanced">Balanceado CHR</option>
+          <option value="water">Agua / DPH</option>
+          <option value="permitting">Permitting / madurez administrativa</option>
+          <option value="tenders">Licitaciones / obra hidráulica</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Opciones</label>
+        <div class="checks">
+          <label class="check"><input id="businessDays" type="checkbox" checked/> Solo días laborables</label>
+          <label class="check"><input id="fetchBody" type="checkbox" checked/> Texto para scoring</label>
+          <label class="check"><input id="autoExport" type="checkbox"/> Exportar CSV al terminar</label>
+          <label class="check"><input id="keepLogs" type="checkbox" checked/> Log detallado</label>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="field"><label>Concurrencia</label><input id="concurrency" type="number" min="1" max="12" value="4"/></div>
+        <div class="field"><label>Reintentos</label><input id="retries" type="number" min="0" max="8" value="3"/></div>
+        <div class="field"><label>Delay ms</label><input id="delay" type="number" min="0" max="3000" value="120"/></div>
+      </div>
+
+
+      <div class="field" style="margin-top:10px">
+        <label>Cargar CSV previo</label>
+        <input id="fileInput" type="file" accept=".csv" multiple style="font-size:.82rem;padding:6px 8px"/>
+        <div class="hint">Carga uno o varios CSV exportados previamente. Se unifica con los resultados actuales y activa el dashboard sin necesidad de nueva búsqueda.</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn primary" id="btnRun" type="button">▶ Iniciar búsqueda</button>
+        <button class="btn danger" id="btnStop" type="button" disabled>■ Detener</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btnDemo" type="button">Demo</button>
+        <button class="btn" id="btnClear" type="button">Limpiar</button>
+        <button class="btn success" id="btnCsv" type="button" disabled>CSV</button>
+        <button class="btn" id="btnJson" type="button" disabled>JSON</button>
+      </div>
+
+      <div class="note" style="margin-top:10px">
+        Llama directamente a la API del BOE desde el navegador (sin proxy). No puede mantener ejecución al cerrar la pestaña. El CSV exportado es compatible con el dashboard de análisis.
+      </div>
+      <div class="small" id="statusLine" style="margin-top:8px">Sin búsqueda activa.</div>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar">
+      <div class="status-dot" id="statusDot"></div>
+      <div class="status-main">
+        <div class="status-txt" id="statusTxt">Listo</div>
+        <div class="status-sub" id="statusSub">Sin búsqueda activa</div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+      <div class="status-count" id="statusCount">0</div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpis">
+      <div class="kpi" data-kpi="total"><div class="l">Resultados únicos</div><div class="n" id="kTotal">0</div><div class="s">tras deduplicación</div></div>
+      <div class="kpi" data-kpi="chr"><div class="l">CHR probables / explícitas</div><div class="n" id="kChr">0</div></div>
+      <div class="kpi" data-kpi="competition"><div class="l">Competencias de proyectos</div><div class="n" id="kComp">0</div></div>
+      <div class="kpi" data-kpi="expedients"><div class="l">Expedientes detectados</div><div class="n" id="kExp">0</div></div>
+      <div class="kpi" data-kpi="high"><div class="l">Alta prioridad (score ≥ 70)</div><div class="n" id="kHigh">0</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab active" data-view="dashboard">Dashboard</button>
+        <button class="tab" data-view="results">Resultados</button>
+        <button class="tab" data-view="expedients">Expedientes</button>
+        <button class="tab" data-view="detail">Detalle / Timeline</button>
+        <button class="tab" data-view="forensic">Forense</button>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div class="view-panel active" id="view-dashboard">
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>Por año <span style="text-transform:none;font-size:.7rem;font-weight:400">(pulsar filtra)</span></h3>
+            <div class="year-mini" id="yearChart"></div>
+          </div>
+          <div class="chart-card">
+            <h3>Bloque funcional</h3>
+            <div class="bar-list" id="blockChart"></div>
+          </div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>Tipo de anuncio</h3>
+            <div class="bar-list" id="typeChart"></div>
+          </div>
+          <div class="chart-card">
+            <h3>Fase de permitting</h3>
+            <div class="bar-list" id="phaseChart"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTADOS -->
+      <div class="view-panel" id="view-results">
+        <div class="filters-row">
+          <input id="filterText" type="text" placeholder="Filtrar por texto, ID BOE, departamento…" style="flex:1;min-width:180px"/>
+          <select id="filterType"><option value="">Todos los tipos</option></select>
+          <select id="filterPhase"><option value="">Todas las fases</option></select>
+          <select id="sortSelect">
+            <option value="score_desc">Score ↓</option>
+            <option value="date_desc">Fecha ↓</option>
+            <option value="date_asc">Fecha ↑</option>
+            <option value="score_asc">Score ↑</option>
+          </select>
+        </div>
+        <div class="inline-stats" id="resultStats"></div>
+        <div class="table-wrap">
+          <table id="resultsTable">
+            <thead><tr>
+              <th data-sort="score">Score</th>
+              <th data-sort="fecha_iso">Fecha</th>
+              <th>Fuente</th>
+              <th>Fase</th>
+              <th>Tipo</th>
+              <th>ID BOE/DOG</th>
+              <th>Título</th>
+              <th>Departamento</th>
+              <th>Rastros CHR</th>
+              <th>Expediente</th>
+              <th>Enlaces</th>
+            </tr></thead>
+            <tbody id="resTbody"></tbody>
+          </table>
+        </div>
+        <div class="cards" id="resCards"></div>
+      </div>
+
+      <!-- EXPEDIENTES -->
+      <div class="view-panel" id="view-expedients">
+        <div class="filters-row" style="margin-bottom:10px">
+          <input id="expFilterText" type="text" placeholder="Expediente, promotor, río, municipio…" style="flex:1;min-width:180px"/>
+          <select id="expFilterChr">
+            <option value="">Todas las clasificaciones CHR</option>
+            <option value="CHR explícita">CHR explícita</option>
+            <option value="CHR probable">CHR probable</option>
+            <option value="Hidroeléctrico">Hidroeléctrico</option>
+            <option value="No energético">No energético</option>
+          </select>
+          <select id="expFilterScore">
+            <option value="0">Todos los scores</option>
+            <option value="50">Score ≥ 50</option>
+            <option value="70">Score ≥ 70</option>
+            <option value="90">Score ≥ 90</option>
+          </select>
+          <select id="expSortSelect">
+            <option value="score_desc">Score ↓</option>
+            <option value="count_desc">Nº anuncios ↓</option>
+            <option value="date_desc">Fecha última ↓</option>
+            <option value="dur_desc">Duración ↓</option>
+          </select>
+        </div>
+        <div class="inline-stats" id="expStats"></div>
+        <div class="table-wrap" style="margin-top:8px">
+          <table id="expTable">
+            <thead><tr>
+              <th data-esort="score">Score</th>
+              <th data-esort="expediente">Expediente</th>
+              <th>Promotor</th>
+              <th>Río</th>
+              <th>Municipio</th>
+              <th data-esort="count">Nº anuncios</th>
+              <th data-esort="dur">Duración</th>
+              <th>CHR</th>
+            </tr></thead>
+            <tbody id="expTbody"></tbody>
+          </table>
+        </div>
+        <div class="cards" id="expCards"></div>
+      </div>
+
+      <!-- DETALLE / TIMELINE -->
+      <div class="view-panel" id="view-detail">
+        <div class="exp-layout" style="padding:4px 0">
+          <div class="exp-summary">
+            <div class="panel">
+              <div class="panel-hd"><h2>Resumen expediente</h2></div>
+              <div class="panel-bd">
+                <div id="expEmpty" class="small">Selecciona un expediente para ver su timeline.</div>
+                <div id="expBox" class="hidden">
+                  <div style="font-size:1rem;font-weight:800" id="expTitle"></div>
+                  <div class="small" id="expSub" style="margin-top:3px"></div>
+                  <div class="stat-grid">
+                    <div class="stat"><div class="k">Promotor</div><div class="v" id="expPromoter">—</div></div>
+                    <div class="stat"><div class="k">Río</div><div class="v" id="expRiver">—</div></div>
+                    <div class="stat"><div class="k">Municipio</div><div class="v" id="expMuni">—</div></div>
+                    <div class="stat"><div class="k">Duración</div><div class="v" id="expDur">—</div></div>
+                    <div class="stat"><div class="k">Score</div><div class="v" id="expScore">—</div></div>
+                    <div class="stat"><div class="k">CHR</div><div class="v" id="expChr">—</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="small" style="padding:4px 2px">La agrupación prioriza código formal de expediente y, si no existe, usa huella combinada de promotor, río, municipio y tipo.</div>
+          </div>
+          <div class="stack">
+            <div class="panel">
+              <div class="panel-hd"><h2>Timeline interactivo</h2></div>
+              <div class="panel-bd">
+                <div id="tlEmpty" class="small">Selecciona un expediente para ver su timeline.</div>
+                <div class="timeline-shell" id="tlShell">
+                  <button class="timeline-nav left hidden" id="tlLeft" type="button">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="10,3 6,8 10,13"/></svg>
+                  </button>
+                  <div class="timeline-wrap" id="tlWrap"><div class="timeline" id="tlBox"></div></div>
+                  <button class="timeline-nav right hidden" id="tlRight" type="button">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,3 10,8 6,13"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-hd"><h2>Anuncios del expediente</h2></div>
+              <div class="panel-bd"><div id="expDetailList" class="stack"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORENSE -->
+      <div class="view-panel" id="view-forensic">
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>Log de ejecución</h3>
+            <div class="log-box" id="logBox">Sin eventos todavía.</div>
+          </div>
+          <div>
+            <div class="chart-card">
+              <h3>Estadística de ejecución</h3>
+              <div class="inline-stats" id="execStats"></div>
+              <div class="note" id="forensicNote" style="margin-top:10px">Sin ejecución reciente.</div>
+            </div>
+            <div class="chart-card" style="margin-top:12px">
+              <h3>Capacidades activas</h3>
+              <ul style="margin:0;padding-left:16px;color:var(--muted);font-size:.82rem;line-height:1.8">
+                <li>Fetch directo a API BOE (sin proxy)</li>
+                <li>Concurrencia controlada en pool de workers</li>
+                <li>Retry con backoff incremental</li>
+                <li>Scoring CHR: título + cuerpo + tipo + fase + rastro terminológico</li>
+                <li>Deduplicación por identidad compuesta (ID+URL+título)</li>
+                <li>Agrupación en expedientes por código formal o huella combinada</li>
+                <li>Timeline interactivo con flechas de navegación</li>
+                <li>Persistencia local de configuración y resultados</li>
+                <li>Export CSV compatible con dashboard de análisis</li>
+                <li>Fuente automática: BOE (confederaciones estatales) / DOG o BOGA (Augas de Galicia)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /panel tabs -->
+  </main>
+</div><!-- /layout -->
+</div><!-- /app -->
+
+<script>
+/* ============================================================
+   CONSTANTES Y CONFIGURACIÓN
+   ============================================================ */
+const BOE_API   = 'https://boe.es/datosabiertos/api/boe/sumario/';
+const STORE_KEY = 'boe_hidro_chr_live_v2';
+
+const CONFEDERACIONES = [
+  'Confederación Hidrográfica del Cantábrico',
+  'Confederación Hidrográfica del Duero',
+  'Confederación Hidrográfica del Ebro',
+  'Confederación Hidrográfica del Guadalquivir',
+  'Confederación Hidrográfica del Guadiana',
+  'Confederación Hidrográfica del Júcar',
+  'Confederación Hidrográfica del Miño-Sil',
+  'Confederación Hidrográfica del Segura',
+  'Confederación Hidrográfica del Tajo',
+  'Confederación Hidrográfica del Norte',
+  'Dirección General del Agua',
+  'Augas de Galicia'
+];
+
+const TIPOS = [
+  {key:'licitacion',    label:'Licitación',            color:'blue',   re:/anuncio de licitaci[oó]n|licitaci[oó]n de:|concurso de proyecto|pliego/i},
+  {key:'formalizacion', label:'Formalización contrato', color:'teal',   re:/formalizaci[oó]n de contrato|anuncio de formalizaci[oó]n/i},
+  {key:'concesion',     label:'Concesión otorgada',     color:'low',    re:/concesi[oó]n otorgada|concesiones otorgadas|otorgamiento de la concesi[oó]n|se hace p[uú]blico.*otorgad/i},
+  {key:'ip_aprovec',    label:'IP aprovechamiento',     color:'violet', re:/informaci[oó]n p[uú]blica.*aprovechamiento|expediente.*aprovechamiento.*agua|uso privativo de aguas/i},
+  {key:'ip_vertido',    label:'IP vertido',             color:'mid',    re:/autorizaci[oó]n de vertido|procedimiento.*vertido|informaci[oó]n p[uú]blica.*vertido/i},
+  {key:'ip_proyecto',   label:'IP proyecto / obra',     color:'violet', re:/informaci[oó]n p[uú]blica.*proyecto|proyecto de construcci[oó]n|proyecto de central/i},
+  {key:'competencia',   label:'Competencia proyectos',  color:'high',   re:/competencia de proyectos|art[íi]culo 105|tr[aá]mite de competencia/i},
+  {key:'resolucion',    label:'Resolución / disposición',color:'blue',  re:/resoluci[oó]n.*confederaci[oó]n|disposici[oó]n.*confederaci[oó]n/i}
+];
+
+const PRESETS = {
+  balanced:{
+    titleTerms:[['central hidroeléctrica reversible',30],['bombeo',20],['hidroeléctrica',12],['aprovechamiento',14],['concesión',16],['competencia de proyectos',24],['dominio público hidráulico',18],['salto',10],['azud',6]],
+    bodyTerms:[['pumped storage',24],['central reversible',26],['energía almacenada',16],['almacenamiento',14],['dominio público hidráulico',18],['caudal',8],['embalse',10],['balsa',10],['turbinado',12],['bombeo',16]],
+    typeBoost:{concesion:18,competencia:24,ip_aprovec:20,ip_proyecto:12,licitacion:8,formalizacion:6,resolucion:8,ip_vertido:4},
+    phaseBoost:{'Concesión DPH':20,'Competencia':26,'Información pública':14,'Proyecto / obra':10,'Resolución':8,'Licitación':6,'Otros':2}
+  },
+  water:{
+    titleTerms:[['aprovechamiento',24],['concesión',20],['dominio público hidráulico',22],['caudal',10],['embalse',12],['presa',8],['salto',10]],
+    bodyTerms:[['dominio público hidráulico',24],['uso privativo',18],['caudal ecológico',12],['aprovechamiento hidroeléctrico',16],['cauce',10]],
+    typeBoost:{concesion:24,competencia:16,ip_aprovec:26,ip_proyecto:8,licitacion:4,formalizacion:3,resolucion:8,ip_vertido:6},
+    phaseBoost:{'Concesión DPH':26,'Competencia':18,'Información pública':12,'Proyecto / obra':8,'Resolución':8,'Licitación':4,'Otros':1}
+  },
+  permitting:{
+    titleTerms:[['información pública',14],['resolución',14],['competencia de proyectos',22],['concesión',20],['autorización',12]],
+    bodyTerms:[['expediente',10],['alegaciones',12],['trámite',10],['dominio público hidráulico',12],['impacto ambiental',12]],
+    typeBoost:{concesion:20,competencia:22,ip_aprovec:18,ip_proyecto:14,licitacion:6,formalizacion:4,resolucion:16,ip_vertido:8},
+    phaseBoost:{'Concesión DPH':22,'Competencia':22,'Información pública':16,'Proyecto / obra':12,'Resolución':16,'Licitación':6,'Otros':2}
+  },
+  tenders:{
+    titleTerms:[['licitación',24],['formalización',18],['proyecto de construcción',16],['obra',10],['presa',6],['embalse',8]],
+    bodyTerms:[['pliego',18],['valor estimado',8],['procedimiento abierto',8],['contrato',10],['obra hidráulica',16]],
+    typeBoost:{concesion:8,competencia:8,ip_aprovec:10,ip_proyecto:16,licitacion:24,formalizacion:20,resolucion:8,ip_vertido:4},
+    phaseBoost:{'Concesión DPH':8,'Competencia':8,'Información pública':10,'Proyecto / obra':16,'Resolución':8,'Licitación':24,'Otros':2}
+  }
+};
+
+const DEMO_ROWS = [
+  {score:128,fecha:'19/08/2025',fecha_iso:'20250819',year:2025,source:'BOE',seccion:'V. Anuncios',departamento:'Confederación Hidrográfica del Cantábrico',id:'BOE-B-2025-29911',titulo:'Anuncio de la Comisaría de Aguas de la Confederación Hidrográfica del Cantábrico, O.A., de información pública de expediente A/20/2º1401 de concesión de aguas con destino a almacenamiento hidráulico reversible en el término municipal de Caso, río Nalón.',tipo_key:'ip_aprovec',tipo_label:'IP aprovechamiento',tipo_color:'violet',phase:'Información pública',score_rationale:['T:hidroeléctrica(+12)','T:aprovechamiento(+14)','Traza CHR fuerte(+18)','Fase:Información pública(+14)'],url_html:'https://www.boe.es/boe/dias/2025/08/19/pdfs/BOE-B-2025-29911.pdf',url_pdf:'',url_xml:''},
+  {score:138,fecha:'11/12/2025',fecha_iso:'20251211',year:2025,source:'BOE',seccion:'V. Anuncios',departamento:'Confederación Hidrográfica del Cantábrico',id:'BOE-B-2025-45501',titulo:'Anuncio de la Confederación Hidrográfica del Cantábrico, O.A., de competencia de proyectos en el expediente A/20/2º1401 relativo al aprovechamiento de aguas para almacenamiento hidráulico reversible en Caso, sobre el río Nalón.',tipo_key:'competencia',tipo_label:'Competencia proyectos',tipo_color:'high',phase:'Competencia',score_rationale:['T:competencia de proyectos(+24)','Tipo:Competencia(+24)','Traza CHR fuerte(+18)'],url_html:'https://www.boe.es/boe/dias/2025/12/11/pdfs/BOE-B-2025-45501.pdf',url_pdf:'',url_xml:''},
+  {score:92,fecha:'12/03/2026',fecha_iso:'20260312',year:2026,source:'BOE',seccion:'V. Anuncios',departamento:'Confederación Hidrográfica del Duero',id:'BOE-B-2026-7587',titulo:'Anuncio de la Confederación Hidrográfica del Duero, O.A., de competencia de proyectos de la concesión de un aprovechamiento de aguas superficiales en el término municipal de Palencia.',tipo_key:'competencia',tipo_label:'Competencia proyectos',tipo_color:'high',phase:'Competencia',score_rationale:['T:competencia de proyectos(+24)','Tipo:Competencia(+24)'],url_html:'https://www.boe.es/',url_pdf:'',url_xml:''},
+  {score:84,fecha:'20/11/2025',fecha_iso:'20251120',year:2025,source:'BOE',seccion:'V. Anuncios',departamento:'Confederación Hidrográfica del Guadalquivir',id:'BOE-B-2025-42767',titulo:'Anuncio de la Confederación Hidrográfica del Guadalquivir por el que se somete a información pública la solicitud de aprovechamiento de aguas con destino hidroeléctrico en el embalse de Iznájar, término municipal de Rute.',tipo_key:'ip_aprovec',tipo_label:'IP aprovechamiento',tipo_color:'violet',phase:'Información pública',score_rationale:['T:hidroeléctrica(+12)','T:aprovechamiento(+14)','B:embalse(+10)'],url_html:'https://www.boe.es/',url_pdf:'',url_xml:''},
+  {score:73,fecha:'02/02/2024',fecha_iso:'20240202',year:2024,source:'BOE',seccion:'V. Anuncios',departamento:'Confederación Hidrográfica del Cantábrico',id:'BOE-B-2024-5200',titulo:'Anuncio de la Confederación Hidrográfica del Cantábrico, O.A., de concesión otorgada de aprovechamiento hidroeléctrico en el arroyo Ponga, término municipal de Ponga.',tipo_key:'concesion',tipo_label:'Concesión otorgada',tipo_color:'low',phase:'Concesión DPH',score_rationale:['T:hidroeléctrica(+12)','T:aprovechamiento(+14)','Traza hidráulica(+8)'],url_html:'https://www.boe.es/',url_pdf:'',url_xml:''},
+  {score:96,fecha:'18/01/2026',fecha_iso:'20260118',year:2026,source:'DOG',seccion:'Diario Oficial de Galicia',departamento:'Augas de Galicia',id:'DOG-2026-100',titulo:'Anuncio de Augas de Galicia por el que se somete a información pública el expediente AG-PSH-2026-001 para aprovechamiento hidroeléctrico reversible en el embalse de As Pontes, término municipal de As Pontes.',tipo_key:'ip_aprovec',tipo_label:'IP aprovechamiento',tipo_color:'violet',phase:'Información pública',score_rationale:['T:hidroeléctrica(+12)','T:aprovechamiento(+14)','Traza CHR fuerte(+18)','B:embalse(+10)'],url_html:'https://dog.gal/',url_pdf:'',url_xml:''},
+  {score:55,fecha:'15/05/2023',fecha_iso:'20230515',year:2023,source:'BOE',seccion:'V. Anuncios',departamento:'Confederación Hidrográfica del Ebro',id:'BOE-B-2023-15000',titulo:'Anuncio de la Confederación Hidrográfica del Ebro de información pública de autorización de vertido en el término municipal de Zaragoza.',tipo_key:'ip_vertido',tipo_label:'IP vertido',tipo_color:'mid',phase:'Información pública',score_rationale:['Tipo:IP vertido(+4)','Fase:Información pública(+14)'],url_html:'https://www.boe.es/',url_pdf:'',url_xml:''}
+];
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+const state = {
+  running:false, stopRequested:false, progress:0,
+  status:'Listo', statusSub:'Sin búsqueda activa',
+  results:[], log:[], sort:'score_desc',
+  activeView:'dashboard', activeExpId:null,
+  activeYear:null, activeType:null, activePhase:null,
+  expedients:[],
+  stats:{requests:0,retries:0,errors:0,daysProcessed:0,daysWithData:0,days404:0,htmlFetches:0,dedupedOut:0,startedAt:null,finishedAt:null,elapsedMs:0}
+};
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const norm = s => String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const arr  = x => Array.isArray(x)?x:(x?[x]:[]);
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const normPdf = v => typeof v==='string'?v:(v&&v.texto?v.texto:'');
+function toDs(d){
+  if(typeof d==='string')return d;
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
+  return `${y}${m}${day}`;
+}
+function fmtDate(v){
+  if(!v)return'—';
+  if(typeof v==='string'&&v.length===8)return`${v.slice(6,8)}/${v.slice(4,6)}/${v.slice(0,4)}`;
+  const dt=v instanceof Date?v:new Date(v);
+  return isNaN(dt)?String(v):dt.toLocaleDateString('es-ES');
+}
+function parseDateIso(s){
+  if(!s)return null;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return new Date(s+'T00:00:00');
+  if(/^\d{8}$/.test(s))return new Date(`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}T00:00:00`);
+  const m=String(s).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(m)return new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00`);
+  return null;
+}
+function daysBetween(a,b){if(!a||!b)return 0;return Math.round((b-a)/86400000);}
+function slugify(s){return norm(s).replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');}
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return'H'+Math.abs(h);}
+function dedupe(rows){
+  const seen=new Set();
+  return rows.filter(r=>{
+    const key=[r.id||'',r.fecha_iso||'',norm(r.titulo||''),r.url_html||''].join('|');
+    if(seen.has(key))return false; seen.add(key); return true;
+  });
+}
+function getItems(dept){
+  const out=[];
+  arr(dept.item).forEach(i=>out.push(i));
+  arr(dept.epigrafe).forEach(ep=>arr(ep.item).forEach(i=>out.push(i)));
+  return out;
+}
+function mostCommon(arr2){
+  const vals=arr2.filter(Boolean); if(!vals.length)return'';
+  const m=new Map(); vals.forEach(v=>m.set(v,(m.get(v)||0)+1));
+  return[...m.entries()].sort((a,b)=>b[1]-a[1])[0][0];
+}
+function escapeRegExp(s){return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function prettyMs(ms){
+  const s=Math.round(ms/1000);
+  if(s<60)return`${s}s`;
+  const m=Math.floor(s/60),rs=s%60;
+  if(m<60)return`${m}m ${rs}s`;
+  const h=Math.floor(m/60),rm=m%60;
+  return`${h}h ${rm}m`;
+}
+function scoreBandCls(score){
+  if(score>=70)return'low';    // verde
+  if(score>=45)return'teal';
+  if(score>=25)return'mid';
+  return'blue';
+}
+function nice(s){return s||'—';}
+function countBy(rows,fn){
+  const m=new Map();
+  rows.forEach(r=>{const k=fn(r);m.set(k,(m.get(k)||0)+1);});
+  return[...m.entries()].map(([label,value])=>({label,value}));
+}
+
+/* ============================================================
+   CLASIFICACIÓN Y SCORING
+   ============================================================ */
+function classify(title){
+  for(const t of TIPOS)if(t.re.test(title))return t;
+  return{key:'otro',label:'Otro',color:'blue'};
+}
+function inferPhase(tipo,titulo,body){
+  const text=norm(`${titulo} ${body}`);
+  if(tipo.key==='competencia'||/competencia de proyectos/.test(text))return'Competencia';
+  if(tipo.key==='concesion'||/concesion otorgada|uso privativo|aprovechamiento hidroelectrico/.test(text))return'Concesión DPH';
+  if(/informacion publica|alegaciones|exposicion publica/.test(text))return'Información pública';
+  if(tipo.key==='licitacion'||tipo.key==='formalizacion')return'Licitación';
+  if(/proyecto de construccion|proyecto|obra|ejecucion de obras/.test(text))return'Proyecto / obra';
+  if(tipo.key==='resolucion')return'Resolución';
+  return'Otros';
+}
+function scoreResult(input,preset){
+  const traces=[];let score=0;
+  const title=norm(input.titulo);
+  const body=norm(input.bodyText||'');
+  const both=`${title} ${body}`;
+  for(const[term,pts]of preset.titleTerms){if(title.includes(norm(term))){score+=pts;traces.push(`T:${term}(+${pts})`);}}
+  for(const[term,pts]of preset.bodyTerms){if(both.includes(norm(term))){score+=pts;traces.push(`B:${term}(+${pts})`);}}
+  const tp=preset.typeBoost[input.tipo.key]||0;if(tp){score+=tp;traces.push(`Tipo:${input.tipo.label}(+${tp})`);}
+  const pp=preset.phaseBoost[input.phase]||0;if(pp){score+=pp;traces.push(`Fase:${input.phase}(+${pp})`);}
+  if(/central hidroelectrica reversible|pumped storage|bombeo/.test(both)){score+=18;traces.push('Traza CHR fuerte(+18)');}
+  if(/embalse|balsa|turbina|turbinado|salto|caudal/.test(both)){score+=8;traces.push('Traza hidráulica(+8)');}
+  if(/dominio publico hidraulico|aprovechamiento|ocupacion/.test(both)){score+=10;traces.push('Traza DPH(+10)');}
+  score=Math.min(100,Math.max(0,score));
+  return{score,traces};
+}
+function detectSource(titulo,deptName,fileName){
+  const t=norm([titulo,deptName,fileName].join(' '));
+  if(t.includes('augas de galicia')||/augas/i.test(fileName))return'DOG';
+  if(/boga/i.test(fileName))return'BOGA';
+  return'BOE';
+}
+
+/* ============================================================
+   EXTRACCIÓN PARA EXPEDIENTES (igual que dashboard)
+   ============================================================ */
+function extractExpedient(titulo){
+  let m=titulo.match(/\b([A-Z]{1,4}\/\d{1,3}\/[^ ,.;:]+)/);
+  if(m)return m[1];
+  m=titulo.match(/\b([A-Z]{2,6}-[A-Z0-9\-\/]{3,})\b/);
+  if(m&&/AG-|EXP|PSH|CHR/.test(m[1]))return m[1];
+  m=titulo.match(/\bexpediente\s+([A-Z0-9\/º\.\-]+)/i);
+  if(m)return m[1];
+  return'';
+}
+
+function tidyPromoter(s){
+  // Quitar verbo introductorio al inicio
+  s=s.replace(/^(?:a solicitud de|solicitado por|a instancia de|presentada por|formulada por|instado por|promovida por|suscrita por|por)\s+/i,'');
+  // Cortar antes de forma jurídica
+  s=s.replace(/\s*,?\s*S\.(?:L\.U\.|A\.U\.|L\.|A\.|C\.|Coop\.).*$/i,'');
+  // Cortar ante preposición de ubicación o cláusula relativa
+  s=s.replace(/\s+(?:en el|en la|en los|en las|para |sobre |,?\s*en\s|por el que|por la que).*$/i,'');
+  return s.replace(/[.;:].*$/,'').replace(/,\s*$/,'').replace(/\s{2,}/g,' ').trim();
+}
+function tidyPlace(s){
+  return s.replace(/\s+(?:provincia|prov\.|río|r[ií]o|arroyo|sobre|en el).*$/i,'')
+          .replace(/[.;:].*$/,'').replace(/,\s*$/,'').replace(/\s{2,}/g,' ').trim();
+}
+
+function extractPromoter(titulo){
+  const FJ='S\\.(?:L\\.U?\\.|A\\.U?\\.|C\\.|Coop\\.)';
+  const FJre=new RegExp(FJ,'i');
+  let m;
+
+  // 1. Forma jurídica: capturar nombre (1-7 palabras) + S.L./S.A./etc
+  m=titulo.match(new RegExp(
+    '\\bpor\\s+((?:[A-ZÁÉÍÓÚÑa-záéíóúñ0-9\\-][A-ZÁÉÍÓÚÑa-záéíóúñ0-9\\-]* ){1,7}'+FJ+')',
+    'i'));
+  if(m)return tidyPromoter(m[1]);
+
+  // 2. Verbos de solicitante + nombre hasta forma jurídica
+  m=titulo.match(new RegExp(
+    '(?:a solicitud de|solicitado por|a instancia de|presentada por|formulada por|instado por|suscrita por|promovida por)\\s+'+
+    '((?:[A-ZÁÉÍÓÚÑa-záéíóúñ0-9\\-][A-ZÁÉÍÓÚÑa-záéíóúñ0-9\\-]* ){1,7}'+FJ+')',
+    'i'));
+  if(m)return tidyPromoter(m[1]);
+
+  // 3. Cualquier empresa con forma jurídica como ancla (patrón general)
+  m=titulo.match(new RegExp(
+    '(?:^|[\\.,]\\s+)([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ0-9\\- ]{2,60}?)\\s*,?\\s*'+FJ,
+    'i'));
+  if(m){
+    const c=m[1].trim();
+    if(!/Confederaci[oó]n|Ministerio|Comisa|Direcci[oó]n|Agencia|Secretar/i.test(c))
+      return tidyPromoter(c);
+  }
+
+  // 4. don/doña persona física
+  m=titulo.match(/\b(?:don|doña)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){1,4})(?=\s*,|\s+para|\s+en\s|\s+a\s|$)/i);
+  if(m)return 'Don/ña '+m[1].trim();
+
+  // 5. Comunidad de Regantes
+  m=titulo.match(/(Comunidad de Regantes\s+(?:del?\s+)?[A-ZÁÉÍÓÚÑa-záéíóúñ][A-ZÁÉÍÓÚÑa-záéíóúñ ]{1,50}?)(?=\s*[,.]|\s+(?:en|para|sobre)\s)/i);
+  if(m)return tidyPromoter(m[1]);
+
+  // 6. Ayuntamiento de
+  m=titulo.match(/(Ayuntamiento de [A-ZÁÉÍÓÚÑa-záéíóúñ ]{3,40}?)(?=\s*[,.]|\s+(?:en|para|sobre)\s|$)/i);
+  if(m)return tidyPromoter(m[1]);
+
+  // 7. Organismos energéticos conocidos sin forma jurídica
+  m=titulo.match(/\b((?:Iberdrola|Endesa|Acciona|Enel|Naturgy|EDP Renovables|EDP|Statkraft|Viesgo|Hidrocantábrico|Electra|Aquagest|Canal de Isabel|Cide|Hidro[A-Za-zÁÉÍÓÚÑáéíóúñ]+)(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ][a-záéíóúñA-ZÁÉÍÓÚÑ]+){0,4})/i);
+  if(m)return tidyPromoter(m[1]);
+
+  if(/augas de galicia/i.test(titulo))return 'Augas de Galicia';
+  return'';
+}
+
+function extractMunicipality(titulo){
+  let m,results=[];
+
+  // 1. término(s) municipal(es) de X [y Y] — capturar hasta coma/punto/prep
+  m=titulo.match(/t[eé]rminos?\s+municipales?\s+de\s+([A-ZÁÉÍÓÚÑa-záéíóúñ][A-ZÁÉÍÓÚÑa-záéíóúñ ,yY\-]{2,80}?)(?=\s*[,.]?\s*(?:provincia|prov\.|r[ií]o|arroyo|sobre|en el|para|\()|\.?\s*$)/i);
+  if(m){
+    const parts=m[1].split(/\s+y\s+|,\s*/);
+    results=parts.map(p=>tidyPlace(p)).filter(p=>p.length>1);
+    if(results.length)return results.slice(0,3).join(' / ');
+  }
+
+  // 2. municipio de X
+  m=titulo.match(/municipio de ([A-ZÁÉÍÓÚÑa-záéíóúñ \-]{3,40}?)(?:\s*[,.(]|$)/i);
+  if(m)return tidyPlace(m[1]);
+
+  // 3. localidad/es de
+  m=titulo.match(/localidades?\s+de\s+([A-ZÁÉÍÓÚÑa-záéíóúñ ,yY\-]{3,60}?)(?=\s*[,.(]|$)/i);
+  if(m){
+    const parts=m[1].split(/\s+y\s+|,\s*/);
+    results=parts.map(p=>tidyPlace(p)).filter(p=>p.length>1);
+    if(results.length)return results.slice(0,3).join(' / ');
+  }
+
+  // 4. Nombre + (Provincia) al final
+  m=titulo.match(/,\s*([A-ZÁÉÍÓÚÑ][a-záéíóúñA-ZÁÉÍÓÚÑ \-]{2,30}?)\s*\(([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{3,20})\)/i);
+  if(m)return tidyPlace(m[1])+' ('+tidyPlace(m[2])+')';
+
+  // 5. Solo (Provincia) al final como último recurso
+  m=titulo.match(/\(([A-ZÁÉÍÓÚÑa-záéíóúñ]{4,25})\)\s*[.,]?\s*$/i);
+  if(m&&!/pdf|boe|dog|s\.l|s\.a|o\.a/i.test(m[1]))return tidyPlace(m[1]);
+
+  return'';
+}
+
+function extractRiver(titulo){
+  const m=titulo.match(/\b(r[ií]o|arroyo|embalse(?:\s+de)?|canal(?:\s+del?)?|torrente|rambla|regato|barranco)\s+([A-ZÁÉÍÓÚÑa-záéíóúñ0-9][A-ZÁÉÍÓÚÑa-záéíóúñ0-9 \-]{1,40})/i);
+  if(!m)return'';
+  const tipo=m[1].replace(/\s+de$/i,'').replace(/\b\w/g,c=>c.toUpperCase());
+  return(tipo+' '+tidyPlace(m[2])).replace(/\s{2,}/g,' ').trim();
+}
+
+function detectChr(titulo,body,score){
+  const t=norm(`${titulo} ${body}`);
+  if(t.includes('reversible')||t.includes('bombeo'))return'CHR explícita';
+  if(t.includes('hidroelect')&&(t.includes('embalse')||score>80))return'CHR probable';
+  if(t.includes('hidroelect')||t.includes('almacenamiento hidraulico'))return'Hidroeléctrico';
+  return'No energético';
+}
+function chrBadgeCls(c){
+  if(c==='CHR explícita')return'high';
+  if(c==='CHR probable')return'mid';
+  if(c==='Hidroeléctrico')return'teal';
+  return'low';
+}
+
+/* Normalizar fila de scraping a formato unificado con expediente */
+function enrichRow(r){
+  const expediente=extractExpedient(r.titulo);
+  const municipality=extractMunicipality(r.titulo);
+  const river=extractRiver(r.titulo);
+  const promoter=extractPromoter(r.titulo);
+  const chrClass=detectChr(r.titulo,r.score_rationale.join(' '),r.score);
+  const clusterBase=expediente?`EXP:${expediente}`:`${slugify(promoter)}|${slugify(river)}|${slugify(municipality)}|${slugify(r.tipo_label||'')}`;
+  const clusterId=expediente?clusterBase:`H:${hashStr(clusterBase)}`;
+  const date=parseDateIso(r.fecha_iso);
+  return{...r,expediente,municipality,river,promoter,chrClass,clusterId,date};
+}
+
+function buildExpedients(rows){
+  const map=new Map();
+  rows.forEach(r=>{if(!map.has(r.clusterId))map.set(r.clusterId,[]);map.get(r.clusterId).push(r);});
+  const exps=[...map.entries()].map(([id,items])=>{
+    items.sort((a,b)=>(a.date||0)-(b.date||0));
+    const first=items[0],last=items[items.length-1];
+    const duration=daysBetween(first.date,last.date);
+    const scoreMax=Math.max(...items.map(x=>x.score));
+    const compCount=items.filter(x=>x.tipo_key==='competencia').length;
+    const chrRank=items.some(x=>x.chrClass==='CHR explícita')?'CHR explícita'
+      :items.some(x=>x.chrClass==='CHR probable')?'CHR probable'
+      :items.some(x=>x.chrClass==='Hidroeléctrico')?'Hidroeléctrico':'No energético';
+    const scoreExp=Math.round(scoreMax*0.6+Math.log(items.length+1)*12+(duration/365)*8+compCount*4);
+    return{id,expediente:first.expediente||'',
+      promoter:mostCommon(items.map(x=>x.promoter)),
+      river:mostCommon(items.map(x=>x.river)),
+      municipality:mostCommon(items.map(x=>x.municipality)),
+      organism:first.departamento||'',
+      source:first.source||'',
+      count:items.length,firstDate:first.date,lastDate:last.date,
+      duration,chrClass:chrRank,score:scoreExp,items};
+  });
+  exps.sort((a,b)=>b.score-a.score||b.count-a.count);
+  return exps;
+}
+
+/* ============================================================
+   CALENDARIO
+   ============================================================ */
+function buildDays(y0,y1,businessOnly){
+  const days=[];
+  const today=new Date();
+  const start=new Date(y0,0,1);
+  const end=new Date(Math.min(new Date(y1,11,31).getTime(),today.getTime()));
+  const d=new Date(start);
+  while(d<=end){
+    const day=d.getDay();
+    if(!businessOnly||(day!==0&&day!==6))days.push(new Date(d));
+    d.setDate(d.getDate()+1);
+  }
+  return days;
+}
+
+/* ============================================================
+   FETCH
+   ============================================================ */
+async function fetchWithRetry(url,init,retries){
+  let lastErr;
+  for(let attempt=0;attempt<=retries;attempt++){
+    try{
+      if(attempt>0)state.stats.retries+=1;
+      const res=await fetch(url,init);
+      if(res.ok||res.status===404||attempt===retries)return res;
+      lastErr=new Error('HTTP '+res.status);
+    }catch(err){lastErr=err;}
+    await sleep(250*(attempt+1));
+  }
+  throw lastErr||new Error('Fallo de red');
+}
+
+async function fetchHtmlText(url,retries){
+  state.stats.htmlFetches+=1;
+  try{
+    const res=await fetchWithRetry(url,{headers:{Accept:'text/html'}},retries);
+    if(!res.ok)return'';
+    const html=await res.text();
+    return html.replace(/<script[\s\S]*?<\/script>/gi,' ').replace(/<style[\s\S]*?<\/style>/gi,' ')
+      .replace(/<[^>]+>/g,' ').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/\s+/g,' ').trim();
+  }catch{return'';}
+}
+
+/* ============================================================
+   BÚSQUEDA DÍA A DÍA
+   ============================================================ */
+async function searchDay(day,confRegex,cfg,preset){
+  const ds=toDs(day);
+  const url=BOE_API+ds;
+  state.stats.requests+=1;
+  let json;
+  try{
+    const res=await fetchWithRetry(url,{headers:{Accept:'application/json'}},cfg.retries);
+    if(res.status===404){state.stats.days404+=1;return[];}
+    if(!res.ok){state.stats.errors+=1;logLine(`HTTP ${res.status} en ${fmtDate(ds)}`,'warn');return[];}
+    json=await res.json();
+  }catch(err){state.stats.errors+=1;logLine(`Error en ${fmtDate(ds)}: ${err.message}`,'err');return[];}
+
+  const sumario=json&&json.data&&json.data.sumario?json.data.sumario:null;
+  if(!sumario)return[];
+
+  const out=[];let dayHasData=false;
+  for(const diario of arr(sumario.diario)){
+    for(const seccion of arr(diario.seccion)){
+      const sCod=seccion['@codigo']||seccion.codigo||'';
+      const sNom=seccion['@nombre']||seccion.nombre||'';
+      if(cfg.section&&sCod!==cfg.section)continue;
+      for(const dept of arr(seccion.departamento)){
+        const dNom=dept['@nombre']||dept.nombre||'';
+        for(const item of getItems(dept)){
+          const titulo=item.titulo||'';
+          if(!titulo||!confRegex.test(titulo))continue;
+          if(!matchKw(titulo,cfg.kwTitle,cfg.logicTitle))continue;
+          let bodyText='';
+          if((cfg.kwBody.length||cfg.fetchBody)&&item.url_html){
+            bodyText=await fetchHtmlText(item.url_html,cfg.retries);
+          }
+          if(cfg.kwBody.length&&!matchKw(bodyText,cfg.kwBody,cfg.logicBody))continue;
+
+          const tipo=classify(titulo);
+          const phase=inferPhase(tipo,titulo,bodyText);
+          const{score,traces}=scoreResult({titulo,bodyText,tipo,phase},preset);
+          const source=detectSource(titulo,dNom,cfg.conf);
+
+          const row={
+            fecha:fmtDate(ds),fecha_iso:ds,year:Number(ds.slice(0,4)),
+            source,seccion:sCod,seccion_nombre:sNom,departamento:dNom,
+            id:item.identificador||'',titulo,tipo_key:tipo.key,tipo_label:tipo.label,tipo_color:tipo.color,
+            phase,score,score_rationale:traces,
+            url_html:item.url_html||'',url_pdf:normPdf(item.url_pdf),url_xml:item.url_xml||''
+          };
+          out.push(row);dayHasData=true;
+          logLine(`✓ ${score.toString().padStart(3,' ')} | ${phase} | ${titulo.slice(0,100)}`,'ok');
+        }
+      }
+    }
+  }
+  if(dayHasData)state.stats.daysWithData+=1;
+  return out;
+}
+
+function matchKw(text,kws,logic){
+  if(!kws.length)return true;
+  const n=norm(text);
+  const matches=kws.map(k=>n.includes(norm(k)));
+  return logic==='AND'?matches.every(Boolean):matches.some(Boolean);
+}
+
+/* ============================================================
+   EJECUCIÓN PRINCIPAL
+   ============================================================ */
+async function runSearch(){
+  if(state.running)return;
+  const cfg=getConfig();
+  state.running=true;state.stopRequested=false;
+  state.results=[];state.progress=0;state.status='Inicializando';
+  state.log=[];state.stats={requests:0,retries:0,errors:0,daysProcessed:0,daysWithData:0,days404:0,
+    htmlFetches:0,dedupedOut:0,startedAt:Date.now(),finishedAt:null,elapsedMs:0};
+  renderAll();
+
+  const confRegex=cfg.conf==='__TODOS__'?new RegExp('Confederaci[oó]n|Augas de Galicia|Comisa','i'):new RegExp(escapeRegExp(cfg.conf),'i');
+  const days=buildDays(cfg.yearStart,cfg.yearEnd,cfg.businessDays);
+  const preset=PRESETS[cfg.preset]||PRESETS.balanced;
+  const acc=[];let cursor=0;
+
+  logLine(`Inicio | ${cfg.conf} | ${cfg.yearStart}–${cfg.yearEnd} | ${days.length} días`,'ok');
+
+  const worker=async()=>{
+    while(!state.stopRequested){
+      const idx=cursor++;
+      if(idx>=days.length)break;
+      const day=days[idx];
+      state.status=`Procesando ${fmtDate(toDs(day))}`;
+      state.statusSub=`${idx+1} de ${days.length} | ${acc.length} resultados`;
+      renderStatusBar();
+      const items=await searchDay(day,confRegex,cfg,preset);
+      if(items.length){
+        items.forEach(x=>acc.push(x));
+        state.results=dedupe(acc).sort((a,b)=>b.score-a.score||(b.fecha_iso<a.fecha_iso?-1:1));
+        state.expedients=buildExpedients(state.results.map(enrichRow));
+        renderAll(); // actualizar KPIs, gráficos y tablas en tiempo real
+      } else {
+        renderStatusBar(); // solo barra si no hay resultados nuevos (más ligero)
+      }
+      state.stats.daysProcessed+=1;
+      state.progress=Math.round((state.stats.daysProcessed/days.length)*100);
+      $('progressFill').style.width=`${state.progress}%`;
+      $('statusCount').textContent=state.results.length;
+      if(cfg.delay)await sleep(cfg.delay);
+    }
+  };
+
+  await Promise.all(Array.from({length:cfg.concurrency},()=>worker()));
+
+  state.running=false;
+  state.stats.finishedAt=Date.now();
+  state.stats.elapsedMs=state.stats.finishedAt-state.stats.startedAt;
+  state.progress=100;
+  state.status=state.stopRequested?'Detenido':'Completado';
+  state.statusSub=`${state.results.length} resultados únicos | ${prettyMs(state.stats.elapsedMs)}`;
+  logLine(`Fin | ${state.results.length} resultados | ${prettyMs(state.stats.elapsedMs)}`,'ok');
+  persistState();
+  state.expedients=buildExpedients(state.results.map(enrichRow));
+  renderAll();
+  if(!state.stopRequested&&cfg.autoExport&&state.results.length)exportCsv();
+}
+
+/* ============================================================
+   CONFIG
+   ============================================================ */
+function getConfig(){
+  return{
+    conf:$('confSelect').value,
+    yearStart:Number($('yearStart').value),
+    yearEnd:Number($('yearEnd').value),
+    section:$('sectionSelect').value,
+    kwTitle:$('kwTitle').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    kwBody:$('kwBody').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    logicTitle:getToggle('logicTitle'),
+    logicBody:getToggle('logicBody'),
+    preset:$('presetSelect').value,
+    businessDays:$('businessDays').checked,
+    fetchBody:$('fetchBody').checked,
+    autoExport:$('autoExport').checked,
+    concurrency:Number($('concurrency').value)||4,
+    retries:Number($('retries').value)||3,
+    delay:Number($('delay').value)||120
+  };
+}
+function getToggle(id){
+  const act=$(`${id}`).querySelector('.tbtn.active');
+  return act?act.dataset.value:'OR';
+}
+function setToggle(id,val){
+  $(`${id}`).querySelectorAll('.tbtn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.value===val);
+  });
+}
+
+/* ============================================================
+   PERSISTENCIA LOCAL
+   ============================================================ */
+function persistState(){
+  try{
+    const data={ui:getConfig(),results:state.results,log:state.log.slice(-400),stats:state.stats};
+    localStorage.setItem(STORE_KEY,JSON.stringify(data));
+  }catch{}
+}
+function loadPersisted(){
+  try{
+    const s=localStorage.getItem(STORE_KEY);
+    if(!s)return;
+    const data=JSON.parse(s);
+    const ui=data.ui||{};
+    if(ui.conf)$('confSelect').value=ui.conf;
+    if(ui.yearStart)$('yearStart').value=ui.yearStart;
+    if(ui.yearEnd)$('yearEnd').value=ui.yearEnd;
+    if(ui.section!==undefined)$('sectionSelect').value=ui.section;
+    if(ui.kwTitle)$('kwTitle').value=ui.kwTitle.join('\n');
+    if(ui.kwBody)$('kwBody').value=ui.kwBody.join('\n');
+    if(ui.logicTitle)setToggle('logicTitle',ui.logicTitle);
+    if(ui.logicBody)setToggle('logicBody',ui.logicBody);
+    if(ui.preset)$('presetSelect').value=ui.preset;
+    if(ui.businessDays!==undefined)$('businessDays').checked=ui.businessDays;
+    if(ui.fetchBody!==undefined)$('fetchBody').checked=ui.fetchBody;
+    if(ui.autoExport!==undefined)$('autoExport').checked=ui.autoExport;
+    if(ui.concurrency)$('concurrency').value=ui.concurrency;
+    if(ui.retries!==undefined)$('retries').value=ui.retries;
+    if(ui.delay!==undefined)$('delay').value=ui.delay;
+    if(data.results&&data.results.length){
+      state.results=data.results;
+      state.stats=data.stats||state.stats;
+      state.log=data.log||[];
+      state.expedients=buildExpedients(state.results.map(enrichRow));
+      state.status='Resultados restaurados';
+      state.statusSub=`${state.results.length} resultados cargados desde sesión anterior`;
+    }
+  }catch{}
+}
+
+/* ============================================================
+   RENDER — STATUS BAR
+   ============================================================ */
+function renderStatusBar(){
+  $('statusTxt').textContent=state.status;
+  $('statusSub').textContent=state.stopRequested&&state.running?'Detención solicitada…':state.statusSub;
+  $('statusCount').textContent=state.results.length;
+  $('progressFill').style.width=`${state.progress}%`;
+  $('statusDot').className='status-dot'+(state.running?' live':state.results.length?' done':'');
+  $('btnRun').disabled=state.running;
+  $('btnStop').disabled=!state.running;
+  $('btnCsv').disabled=!state.results.length;
+  $('btnJson').disabled=!state.results.length;
+  $('statusLine').textContent=state.results.length
+    ?`${state.results.length.toLocaleString('es-ES')} resultados · ${state.expedients.length} expedientes detectados`
+    :'Sin datos cargados.';
+}
+
+/* RENDER — KPIs */
+function renderKpis(){
+  const filtered=getFiltered();
+  const chrItems=filtered.filter(r=>enrichRow(r).chrClass!=='No energético');
+  const comp=filtered.filter(r=>r.tipo_key==='competencia');
+  const exps=buildExpedients(filtered.map(enrichRow));
+  const high=filtered.filter(r=>r.score>=70);
+  $('kTotal').textContent=filtered.length.toLocaleString('es-ES');
+  $('kChr').textContent=chrItems.length.toLocaleString('es-ES');
+  $('kComp').textContent=comp.length.toLocaleString('es-ES');
+  $('kExp').textContent=exps.length.toLocaleString('es-ES');
+  $('kHigh').textContent=high.length.toLocaleString('es-ES');
+}
+
+/* RENDER — GRÁFICOS (barras SVG-free) */
+function renderBarList(containerId,data,onClick){
+  const c=$(containerId); c.innerHTML='';
+  const max=Math.max(1,...data.map(x=>x.value));
+  data.slice(0,10).forEach(d=>{
+    const row=document.createElement('div');row.className='bar-row';
+    row.innerHTML=`<div class="bar-label">${esc(d.label)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4,(d.value/max)*100)}%"></div></div>
+      <div class="bar-val">${d.value}</div>`;
+    row.addEventListener('click',()=>{if(onClick)onClick(d);});
+    c.appendChild(row);
+  });
+}
+function renderYearChart(){
+  const c=$('yearChart');c.innerHTML='';
+  const data=countBy(getFiltered().filter(r=>r.year),r=>r.year).sort((a,b)=>Number(a.label)-Number(b.label));
+  const max=Math.max(1,...data.map(x=>x.value));
+  data.forEach(d=>{
+    const col=document.createElement('div');col.className='year-col';
+    col.innerHTML=`<div class="year-val">${d.value}</div>
+      <div class="year-bar" style="height:${Math.max(5,(d.value/max)*130)}px"></div>
+      <div class="year-lbl">${d.label}</div>`;
+    col.addEventListener('click',()=>{state.activeYear=state.activeYear===Number(d.label)?null:Number(d.label);renderAll();setView('results');});
+    c.appendChild(col);
+  });
+}
+function renderCharts(){
+  const filtered=getFiltered();
+  renderYearChart();
+  renderBarList('blockChart',countBy(filtered,r=>inferBlock(r.tipo_label,r.titulo||'')).sort((a,b)=>b.value-a.value),d=>{});
+  renderBarList('typeChart',countBy(filtered,r=>r.tipo_label).sort((a,b)=>b.value-a.value),d=>{state.activeType=state.activeType===d.label?null:d.label;renderAll();setView('results');});
+  renderBarList('phaseChart',countBy(filtered,r=>r.phase).sort((a,b)=>b.value-a.value),d=>{state.activePhase=state.activePhase===d.label?null:d.label;renderAll();setView('results');});
+}
+function inferBlock(tipoLabel,titulo){
+  const t=norm(`${tipoLabel} ${titulo}`);
+  if(t.includes('competencia'))return'Competencia administrativa';
+  if(t.includes('concesion')||t.includes('aprovechamiento'))return'Recurso hídrico';
+  if(t.includes('vertido'))return'Vertidos';
+  if(t.includes('licitacion')||t.includes('formalizacion'))return'Obra pública hidráulica';
+  if(t.includes('resolucion'))return'Actos administrativos';
+  return'Otros';
+}
+
+/* RENDER — TABLA RESULTADOS */
+function getFiltered(){
+  const text=norm($('filterText').value||'');
+  const type=$('filterType').value;
+  const phase=$('filterPhase').value;
+  return state.results.filter(r=>{
+    if(state.activeYear&&r.year!==state.activeYear)return false;
+    if(state.activeType&&r.tipo_label!==state.activeType)return false;
+    if(state.activePhase&&r.phase!==state.activePhase)return false;
+    if(type&&r.tipo_label!==type)return false;
+    if(phase&&r.phase!==phase)return false;
+    if(text){const hay=norm(`${r.id} ${r.titulo} ${r.departamento} ${r.phase} ${r.tipo_label}`);if(!hay.includes(text))return false;}
+    return true;
+  }).sort(getSortFn(state.sort));
+}
+function getSortFn(sort){
+  switch(sort){
+    case'score_asc':return(a,b)=>a.score-b.score||(a.fecha_iso<b.fecha_iso?-1:1);
+    case'date_asc':return(a,b)=>a.fecha_iso.localeCompare(b.fecha_iso)||b.score-a.score;
+    case'date_desc':return(a,b)=>b.fecha_iso.localeCompare(a.fecha_iso)||b.score-a.score;
+    default:return(a,b)=>b.score-a.score||(b.fecha_iso<a.fecha_iso?-1:1);
+  }
+}
+function renderResultsTable(){
+  const filtered=getFiltered();
+  refillFilterCombos();
+  const tbody=$('resTbody');
+  const enr=filtered.slice(0,400).map(enrichRow);
+  tbody.innerHTML=enr.map(r=>{
+    const links=[
+      r.url_html?`<a href="${esc(r.url_html)}" target="_blank" rel="noopener">HTML</a>`:'',
+      r.url_pdf?`<a href="${esc(r.url_pdf)}" target="_blank" rel="noopener">PDF</a>`:'',
+      r.url_xml?`<a href="${esc(r.url_xml)}" target="_blank" rel="noopener">XML</a>`:''
+    ].filter(Boolean).join(' ');
+    const srcCls=r.source==='DOG'||r.source==='BOGA'?'dog':'';
+    return`<tr>
+      <td><span class="badge ${scoreBandCls(r.score)}">${r.score}</span></td>
+      <td>${esc(r.fecha)}</td>
+      <td><span class="src ${srcCls}">${esc(r.source)}</span></td>
+      <td>${esc(r.phase)}</td>
+      <td><span class="badge ${r.tipo_color||'blue'}">${esc(r.tipo_label)}</span></td>
+      <td>${esc(r.id)}</td>
+      <td><span class="click" data-exp="${esc(r.clusterId)}">${esc(r.titulo)}</span></td>
+      <td>${esc(r.departamento)}</td>
+      <td title="${esc(r.score_rationale.join(' | '))}" style="font-size:.76rem">${esc(r.score_rationale.slice(0,3).join(' · '))}</td>
+      <td>${r.expediente?`<span class="click badge teal" data-exp="${esc(r.clusterId)}">${esc(r.expediente)}</span>`:'<span class="small">huella</span>'}</td>
+      <td style="white-space:nowrap">${links}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="11">Sin resultados para los filtros actuales.</td></tr>';
+
+  $('resTbody').querySelectorAll('[data-exp]').forEach(el=>{
+    el.addEventListener('click',()=>openExp(el.getAttribute('data-exp')));
+  });
+
+  $('resultStats').innerHTML=[
+    `<span class="mini">Mostrando ${Math.min(filtered.length,400)} de ${filtered.length}</span>`,
+    `<span class="mini">Alta prioridad ${filtered.filter(r=>r.score>=70).length}</span>`,
+    `<span class="mini">CHR ${filtered.map(enrichRow).filter(r=>r.chrClass!=='No energético').length}</span>`
+  ].join('');
+}
+function refillFilterCombos(){
+  const types=[...new Set(state.results.map(r=>r.tipo_label).filter(Boolean))].sort();
+  const phases=[...new Set(state.results.map(r=>r.phase).filter(Boolean))].sort();
+  const curT=$('filterType').value,curP=$('filterPhase').value;
+  $('filterType').innerHTML='<option value="">Todos los tipos</option>'+types.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  $('filterPhase').innerHTML='<option value="">Todas las fases</option>'+phases.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  if(types.includes(curT))$('filterType').value=curT;
+  if(phases.includes(curP))$('filterPhase').value=curP;
+}
+
+/* RENDER — EXPEDIENTES */
+function getFilteredExpedients(){
+  const text=norm($('expFilterText')?$('expFilterText').value||'':'');
+  const chrFilter=$('expFilterChr')?$('expFilterChr').value:'';
+  const scoreMin=Number($('expFilterScore')?$('expFilterScore').value||0:0);
+  const sort=$('expSortSelect')?$('expSortSelect').value:'score_desc';
+  let exps=state.expedients.filter(e=>{
+    if(chrFilter&&e.chrClass!==chrFilter)return false;
+    if(e.score<scoreMin)return false;
+    if(text){
+      const hay=norm([e.expediente,e.id,e.promoter,e.river,e.municipality,e.organism].join(' '));
+      if(!hay.includes(text))return false;
+    }
+    return true;
+  });
+  switch(sort){
+    case'count_desc':exps.sort((a,b)=>b.count-a.count||b.score-a.score);break;
+    case'date_desc':exps.sort((a,b)=>(b.lastDate||0)-(a.lastDate||0));break;
+    case'dur_desc':exps.sort((a,b)=>b.duration-a.duration);break;
+    default:exps.sort((a,b)=>b.score-a.score||b.count-a.count);
+  }
+  return exps;
+}
+function renderExpedients(){
+  const exps=getFilteredExpedients();
+  if($('expStats'))$('expStats').innerHTML=[
+    `<span class="mini">Mostrando ${Math.min(exps.length,300)} de ${state.expedients.length} expedientes</span>`,
+    `<span class="mini">CHR explícita ${exps.filter(e=>e.chrClass==='CHR explícita').length}</span>`,
+    `<span class="mini">CHR probable ${exps.filter(e=>e.chrClass==='CHR probable').length}</span>`
+  ].join('');
+  $('expTbody').innerHTML=exps.slice(0,300).map(e=>{
+    const sb=scoreBandCls(e.score);
+    return`<tr>
+      <td><span class="badge ${sb}">${e.score}</span></td>
+      <td><span class="click" data-eid="${esc(e.id)}">${esc(e.expediente||e.id)}</span></td>
+      <td>${esc(nice(e.promoter))}</td>
+      <td>${esc(nice(e.river))}</td>
+      <td>${esc(nice(e.municipality))}</td>
+      <td>${e.count}</td>
+      <td>${esc(fmtDate(e.firstDate))} → ${esc(fmtDate(e.lastDate))}<br/><span class="small">${e.duration} días</span></td>
+      <td><span class="badge ${chrBadgeCls(e.chrClass)}">${esc(e.chrClass)}</span></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="8">Sin expedientes para los filtros actuales.</td></tr>';
+  $('expTbody').querySelectorAll('[data-eid]').forEach(el=>{
+    el.addEventListener('click',()=>openExpById(el.getAttribute('data-eid')));
+  });
+}
+
+/* RENDER — DETALLE TIMELINE */
+function openExp(clusterId){
+  const exp=state.expedients.find(x=>x.id===clusterId)||buildExpedients(state.results.filter(r=>enrichRow(r).clusterId===clusterId).map(enrichRow))[0];
+  setView('detail');
+  renderExpDetail(exp||null);
+}
+function openExpById(id){
+  const exp=state.expedients.find(x=>x.id===id);
+  setView('detail');
+  renderExpDetail(exp||null);
+}
+function inferStage(r){
+  const t=norm(`${r.tipo_label||''} ${r.phase||''} ${r.titulo||''}`);
+  if(t.includes('competencia'))return'Competencia';
+  if(t.includes('solicitud'))return'Solicitud';
+  if(t.includes('informacion publica'))return'Inf. pública';
+  if(t.includes('concesion otorgada')||t.includes('resolucion'))return'Resolución';
+  if(t.includes('modificacion'))return'Modificación';
+  return r.phase||'Hito';
+}
+function renderExpDetail(exp){
+  if(!exp){
+    $('expEmpty').classList.remove('hidden');$('expBox').classList.add('hidden');
+    $('tlEmpty').classList.remove('hidden');$('tlBox').innerHTML='';
+    $('expDetailList').innerHTML='';return;
+  }
+  state.activeExpId=exp.id;
+  $('expEmpty').classList.add('hidden');$('expBox').classList.remove('hidden');
+  $('tlEmpty').classList.add('hidden');
+  $('expTitle').textContent=exp.expediente||exp.id;
+  $('expSub').textContent=`${exp.organism||'—'} · ${exp.source||'BOE'} · ${exp.count} anuncios`;
+  $('expPromoter').textContent=nice(exp.promoter);
+  $('expRiver').textContent=nice(exp.river);
+  $('expMuni').textContent=nice(exp.municipality);
+  $('expDur').textContent=`${fmtDate(exp.firstDate)} → ${fmtDate(exp.lastDate)} · ${exp.duration} días`;
+  $('expScore').textContent=String(exp.score);
+  $('expChr').textContent=exp.chrClass;
+
+  const items=[...exp.items].sort((a,b)=>(a.date||0)-(b.date||0));
+  $('tlBox').innerHTML=items.map(item=>`
+    <div class="node">
+      <div class="node-card" data-url="${esc(item.url_html)}">
+        <div class="node-date">${esc(fmtDate(item.fecha_iso))}</div>
+        <div class="node-stage">${esc(inferStage(item))}</div>
+        <div class="node-sub">${esc(item.tipo_label)}</div>
+        <div class="node-sub">Score ${item.score}</div>
+      </div>
+    </div>`).join('');
+
+  $('tlBox').querySelectorAll('[data-url]').forEach(el=>{
+    el.addEventListener('click',()=>{const u=el.getAttribute('data-url');if(u)window.open(u,'_blank','noopener');});
+  });
+
+  $('expDetailList').innerHTML=items.map(item=>`
+    <article class="card">
+      <div class="card-top">
+        <div><div class="card-title">${esc(item.tipo_label)}</div><div class="small">${esc(fmtDate(item.fecha_iso))} · ${esc(item.departamento)}</div></div>
+        <span class="badge ${scoreBandCls(item.score)}">${item.score}</span>
+      </div>
+      <div style="margin-top:8px;font-size:.84rem">${esc(item.titulo)}</div>
+      <div class="card-meta">
+        <span class="badge ${item.tipo_color||'blue'}">${esc(item.tipo_label)}</span>
+        <span class="badge ${chrBadgeCls(enrichRow(item).chrClass)}">${esc(enrichRow(item).chrClass)}</span>
+      </div>
+      <div class="card-actions">
+        ${item.url_html?`<a class="linkbtn" href="${esc(item.url_html)}" target="_blank" rel="noopener">Abrir anuncio</a>`:''}
+      </div>
+    </article>`).join('');
+
+  requestAnimationFrame(()=>refreshTimelineNav());
+}
+
+/* TIMELINE NAV */
+function initTimelineNav(){
+  const wrap=$('tlWrap'),btnL=$('tlLeft'),btnR=$('tlRight');
+  function update(){
+    if(!wrap)return;
+    const needsScroll=wrap.scrollWidth>wrap.clientWidth+4;
+    const atStart=wrap.scrollLeft<=2;
+    const atEnd=wrap.scrollLeft+wrap.clientWidth>=wrap.scrollWidth-2;
+    btnL.style.display=needsScroll&&!atStart?'flex':'none';
+    btnR.style.display=needsScroll&&!atEnd?'flex':'none';
+  }
+  const STEP=220;
+  btnL.addEventListener('click',()=>{wrap.scrollLeft-=STEP;setTimeout(update,220);});
+  btnR.addEventListener('click',()=>{wrap.scrollLeft+=STEP;setTimeout(update,220);});
+  wrap.addEventListener('scroll',update,{passive:true});
+  if(window.ResizeObserver)new ResizeObserver(update).observe(wrap);
+  return update;
+}
+const refreshTimelineNav=initTimelineNav();
+
+/* RENDER — FORENSE */
+function renderForensic(){
+  const s=state.stats;
+  $('execStats').innerHTML=[
+    `API requests: ${s.requests}`,`Reintentos: ${s.retries}`,`Errores: ${s.errors}`,
+    `Días procesados: ${s.daysProcessed}`,`Días con datos: ${s.daysWithData}`,
+    `404s: ${s.days404}`,`HTML fetches: ${s.htmlFetches}`,
+    `Deduplicados: ${s.dedupedOut}`,`Tiempo: ${s.elapsedMs?prettyMs(s.elapsedMs):'N/D'}`
+  ].map(t=>`<span class="mini">${esc(t)}</span>`).join('');
+  const avg=state.results.length?Math.round(state.results.reduce((a,b)=>a+b.score,0)/state.results.length):0;
+  $('forensicNote').textContent=state.results.length
+    ?`${state.results.length} resultados únicos. Score medio ${avg}. ${s.errors?`${s.errors} incidencias, ${s.retries} reintentos.`:'Sin incidencias de red.'}`
+    :'Sin ejecución reciente.';
+}
+
+/* RENDER — LOG */
+function renderLog(){
+  const box=$('logBox');
+  box.innerHTML=state.log.slice(-500).map(item=>`<div class="log-item ${item.level}">${esc(item.msg)}</div>`).join('')||'Sin eventos.';
+  box.scrollTop=box.scrollHeight;
+}
+function logLine(msg,level='info'){
+  if(!$('keepLogs').checked&&level==='info')return;
+  const ts=new Date().toLocaleTimeString('es-ES',{hour12:false});
+  state.log.push({msg:`[${ts}] ${msg}`,level:level==='info'?'':level});
+  if(state.log.length>600)state.log.splice(0,state.log.length-600);
+  renderLog();
+}
+
+/* RENDER ALL */
+function renderAll(){
+  renderStatusBar();
+  renderKpis();
+  renderCharts();
+  renderResultsTable();
+  state.expedients=buildExpedients(state.results.map(enrichRow));
+  renderExpedients();
+  renderForensic();
+  if(state.activeExpId){
+    const exp=state.expedients.find(x=>x.id===state.activeExpId);
+    if(exp)renderExpDetail(exp);
+  }
+}
+
+/* VISTAS */
+function setView(view){
+  state.activeView=view;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===view));
+  document.querySelectorAll('.view-panel').forEach(v=>v.classList.toggle('active',v.id==='view-'+view));
+}
+
+/* EXPORT */
+function exportCsv(){
+  if(!state.results.length)return;
+  const header=['Score','Fecha','Fase','Tipo','ID BOE','Sección','Departamento','Título','Rastros CHR','URL HTML','URL PDF','URL XML'];
+  const rows=state.results.map(r=>[r.score,r.fecha,r.phase,r.tipo_label,r.id,r.seccion_nombre,r.departamento,r.titulo,r.score_rationale.join(' | '),r.url_html,r.url_pdf,r.url_xml]);
+  const csv='\uFEFF'+[header,...rows].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`BOE_Hidro_CHR_Live_${toDs(new Date())}.csv`;document.body.appendChild(a);a.click();a.remove();
+}
+function exportJson(){
+  if(!state.results.length)return;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify({generated_at:new Date().toISOString(),stats:state.stats,results:state.results},null,2)],{type:'application/json'}));
+  a.download=`BOE_Hidro_CHR_Live_${toDs(new Date())}.json`;document.body.appendChild(a);a.click();a.remove();
+}
+
+/* DEMO */
+function loadDemo(){
+  state.results=DEMO_ROWS;
+  state.status='Demo cargado';state.statusSub=`${DEMO_ROWS.length} resultados de ejemplo`;state.progress=100;
+  state.expedients=buildExpedients(DEMO_ROWS.map(enrichRow));
+  renderAll();
+}
+function clearAll(){
+  if(state.running)return;
+  state.results=[];state.log=[];state.progress=0;state.expedients=[];
+  state.status='Listo';state.statusSub='Sin búsqueda activa';state.activeExpId=null;
+  state.stats={requests:0,retries:0,errors:0,daysProcessed:0,daysWithData:0,days404:0,htmlFetches:0,dedupedOut:0,startedAt:null,finishedAt:null,elapsedMs:0};
+  renderAll();
+}
+
+/* ============================================================
+   ARRANQUE Y EVENTOS — envuelto en DOMContentLoaded para Safari/iOS
+   ============================================================ */
+function initApp(){
+  // Poblar selector de confederaciones
+  const cs=$('confSelect');
+  if(cs){
+    cs.innerHTML='<option value="__TODOS__" style="color:#a40e26;font-weight:700">⚠ Todas las confederaciones (lento, no recomendable)</option>'+CONFEDERACIONES.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  }
+
+  // Toggle OR/AND
+  ['logicTitle','logicBody'].forEach(id=>{
+    const wrap=$(id); if(!wrap)return;
+    wrap.querySelectorAll('.tbtn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        wrap.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  });
+
+  // Tabs
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click',()=>setView(t.dataset.view));
+  });
+
+  // Botones
+
+/* ============================================================
+   CARGA DE CSV PREVIO
+   ============================================================ */
+function parseCsvToRows(text){
+  // Parser robusto: soporta ; y , como separador, comillas, UTF-8 BOM
+  text = text.replace(/^\uFEFF/,''); // BOM
+  const sep = text.indexOf(';') > text.indexOf(',') && text.indexOf(';') !== -1 ? ';' : ',';
+  const lines=[]; let cur='',row=[],inQ=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],nx=text[i+1];
+    if(ch==='"'){if(inQ&&nx==='"'){cur+='"';i++;}else inQ=!inQ;}
+    else if(ch===sep&&!inQ){row.push(cur.trim().replace(/^"|"$/g,''));cur='';}
+    else if((ch==='\n'||ch==='\r')&&!inQ){
+      if(ch==='\r'&&nx==='\n')i++;
+      row.push(cur.trim().replace(/^"|"$/g,''));
+      if(row.some(c=>c!==''))lines.push(row);
+      row=[];cur='';
+    } else cur+=ch;
+  }
+  row.push(cur.trim().replace(/^"|"$/g,''));
+  if(row.some(c=>c!==''))lines.push(row);
+  if(!lines.length)return[];
+  const headers=lines[0].map(h=>h.trim());
+  return lines.slice(1).map(r=>{
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=(r[i]??'').trim());
+    return obj;
+  });
+}
+
+function csvRowToResult(raw){
+  // Convierte fila CSV (exportada por esta app o por el dashboard) a formato interno
+  const score=Number(raw['Score']||raw['score'])||0;
+  const fecha=raw['Fecha']||raw['fecha']||'';
+  const fecha_iso=fecha.includes('/')?
+    `${fecha.slice(6,10)}${fecha.slice(3,5)}${fecha.slice(0,2)}`:
+    (raw['fecha_iso']||fecha.replace(/-/g,'')||'');
+  const year=Number(fecha_iso.slice(0,4))||null;
+  const titulo=raw['Título']||raw['titulo']||raw['title']||'';
+  const tipo_label=raw['Tipo']||raw['tipo_label']||'';
+  const tipo=classify(titulo)||{key:'otro',label:tipo_label,color:'blue'};
+  const phase=raw['Fase']||raw['phase']||inferPhase(tipo,titulo,'');
+  const rastros=raw['Rastros CHR']||raw['score_rationale']||'';
+  const source=raw['Fuente']||raw['source']||detectSource(titulo,raw['Departamento']||'','');
+  return{
+    score,fecha:fecha||fmtDate(fecha_iso),fecha_iso,year,source,
+    seccion:raw['Sección']||raw['seccion_nombre']||'',
+    seccion_nombre:raw['Sección']||raw['seccion_nombre']||'',
+    departamento:raw['Departamento']||raw['departamento']||'',
+    id:raw['ID BOE']||raw['id']||'',titulo,
+    tipo_key:tipo.key,tipo_label:tipo_label||tipo.label,tipo_color:tipo.color,
+    phase,score_rationale:rastros?rastros.split('|').map(s=>s.trim()):[],
+    url_html:raw['URL HTML']||raw['url_html']||'',
+    url_pdf:raw['URL PDF']||raw['url_pdf']||'',
+    url_xml:raw['URL XML']||raw['url_xml']||''
+  };
+}
+
+async function loadFromFiles(fileList){
+  const acc=[];
+  for(const file of fileList){
+    const text=await file.text();
+    const rows=parseCsvToRows(text);
+    if(!rows.length){logLine(`⚠ Sin filas en ${file.name}`,'warn');continue;}
+    const converted=rows.map(r=>csvRowToResult(r)).filter(r=>r.titulo);
+    acc.push(...converted);
+    logLine(`CSV "${file.name}": ${converted.length} filas importadas`,'ok');
+  }
+  if(!acc.length){logLine('⚠ No se encontraron filas válidas en los CSV','warn');return;}
+  // Unir con resultados existentes y deduplicar
+  const merged=dedupe([...state.results,...acc]).sort((a,b)=>b.score-a.score||(b.fecha_iso<a.fecha_iso?-1:1));
+  state.results=merged;
+  state.expedients=buildExpedients(merged.map(enrichRow));
+  state.status='CSV cargado';
+  state.statusSub=`${merged.length} resultados totales (${acc.length} nuevos del CSV)`;
+  state.progress=100;
+  $('progressFill').style.width='100%';
+  $('statusDot').className='status-dot done';
+  persistState();
+  renderAll();
+  logLine(`Total tras importación: ${merged.length} resultados únicos`,'ok');
+}
+
+
+  // Carga de CSV previo
+  const fi=$('fileInput'); if(fi){
+    fi.addEventListener('change', async e => {
+      if(e.target.files&&e.target.files.length) await loadFromFiles(e.target.files);
+      e.target.value='';
+    });
+  }
+
+  $('btnRun').addEventListener('click',runSearch);
+  $('btnStop').addEventListener('click',()=>{state.stopRequested=true;logLine('⚠ Detención solicitada','warn');renderStatusBar();});
+  $('btnDemo').addEventListener('click',loadDemo);
+  $('btnClear').addEventListener('click',clearAll);
+  $('btnCsv').addEventListener('click',exportCsv);
+  $('btnJson').addEventListener('click',exportJson);
+
+  // Filtros de expedientes
+  ['expFilterText','expFilterChr','expFilterScore','expSortSelect'].forEach(id=>{
+    const el=$(id); if(!el)return;
+    el.addEventListener('input',renderExpedients);
+    el.addEventListener('change',renderExpedients);
+  });
+  document.querySelectorAll('#expTable th[data-esort]').forEach(th=>{
+    th.addEventListener('click',()=>{
+      if($('expSortSelect'))$('expSortSelect').value=th.dataset.esort+'_desc';
+      renderExpedients();
+    });
+  });
+
+  // Filtros de tabla resultados
+  $('filterText').addEventListener('input',renderResultsTable);
+  $('filterType').addEventListener('change',renderResultsTable);
+  $('filterPhase').addEventListener('change',renderResultsTable);
+  $('sortSelect').addEventListener('change',()=>{state.sort=$('sortSelect').value;renderResultsTable();});
+
+  document.querySelectorAll('#resultsTable th[data-sort]').forEach(th=>{
+    th.addEventListener('click',()=>{
+      const key=th.dataset.sort;
+      state.sort=key==='score'?(state.sort==='score_desc'?'score_asc':'score_desc'):(state.sort==='date_desc'?'date_asc':'date_desc');
+      $('sortSelect').value=state.sort;renderResultsTable();
+    });
+  });
+
+  document.querySelectorAll('.kpi').forEach(k=>{
+    k.addEventListener('click',()=>{
+      const kind=k.dataset.kpi;
+      if(kind==='expedients')setView('expedients');
+      else setView('results');
+    });
+  });
+
+  // Persistir config al cambiar inputs
+  ['confSelect','yearStart','yearEnd','sectionSelect','presetSelect','businessDays','fetchBody','autoExport','keepLogs','concurrency','retries','delay'].forEach(id=>{
+    const el=$(id); if(!el)return;
+    el.addEventListener('change',persistState);
+    el.addEventListener('input',persistState);
+  });
+
+  // Arranque final: cargar datos persistidos con aviso, limpiar tras 2s
+  loadPersisted();
+  if(state.results.length){
+    // Mostrar banner de aviso
+    const banner=document.createElement('div');
+    banner.id='demoBanner';
+    banner.style.cssText=[
+      'position:fixed','bottom:18px','left:50%','transform:translateX(-50%)',
+      'background:#fff8c5','border:1.5px solid #e3b341','color:#7a5212',
+      'padding:11px 20px','border-radius:10px','font-size:.88rem','font-weight:600',
+      'box-shadow:0 4px 18px rgba(0,0,0,.15)','z-index:9999',
+      'display:flex','align-items:center','gap:10px','white-space:nowrap'
+    ].join(';');
+    banner.innerHTML='⚠ Mostrando datos de la sesión anterior — se limpiarán en <b id="cuentaAtras">2</b>s&nbsp;&nbsp;<button onclick="clearBanner(true)" style="padding:4px 10px;border-radius:6px;border:1px solid #c69320;background:#fffbe6;cursor:pointer;font-size:.82rem;font-weight:700">Conservar</button>';
+    document.body.appendChild(banner);
+
+    // Cuenta atrás visual
+    let secs=2;
+    const tick=setInterval(()=>{
+      secs--;
+      const ca=document.getElementById('cuentaAtras');
+      if(ca)ca.textContent=secs;
+      if(secs<=0){clearInterval(tick);clearBanner(false);}
+    },1000);
+
+    window._autoClearTimer=tick;
+  } else {
+    renderAll();
+  }
+} // fin initApp
+
+function clearBanner(conservar){
+  if(window._autoClearTimer)clearInterval(window._autoClearTimer);
+  const b=document.getElementById('demoBanner');
+  if(b)b.remove();
+  if(!conservar){
+    clearAll();          // limpia resultados
+    loadDemo();          // carga los datos demo para que no quede vacío
+    setTimeout(()=>{     // quita también el demo tras mostrarlo brevemente
+      clearAll();
+      renderAll();
+    },100);
+  }
+}
+
+// Lanzar cuando el DOM esté completamente listo (crítico para Safari/iOS)
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+</script>
+</body>
+</html>
